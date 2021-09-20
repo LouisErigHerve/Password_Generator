@@ -28,11 +28,12 @@
 #define DEFAULT_USE_UPPERCASE_LETTERS                 0
 #define DEFAULT_USE_LOWERCASE_LETTERS                 0
 #define DEFAULT_USE_SPECIAL_CHARACTERS                0
+#define DEFAULT_USE_CUSTOM_LIST                       0
 
 
 /* Global variables ---------------------------------------------------------*/
 
-const uint8_t SpacialCharacterList[] =
+const uint8_t SpecialCharacterList[] =
 {
   '<', '>', '?', ',', '.', ';', ':', '|',
   '!', '%', '&', '#', '{', '}', '(', ')',
@@ -67,11 +68,14 @@ int main(int argc, char *argv[])
   uint32_t UseLettersUpperCase      = 0;
   uint32_t UseLettersLowerCase      = 0;
   uint32_t UseSpecialCharacters     = 0;
+  uint32_t UseCustomList            = 0;
   uint32_t PasswordLength           = 0;
   uint32_t NbOfPasswordToGenerate   = 0;
-  uint8_t  BufferCharactersList[256] = {0};  /* 256 bytes should be enough to store the entire character list, increase if necessary */
+  uint8_t  BufferCharactersList[512] = {0};  /* 512 bytes should be enough to store the entire character list, increase if necessary */
   uint32_t BufferCharactersLen = 0;
   uint8_t  GeneratedPassword[MAX_PASSWORD_LEN + 1] = {0};
+  uint8_t  CustomListBuffer[256 + 1] = {0};
+  uint32_t CustomListLen = 0;
   int Temp = 0;
   int c;
 
@@ -89,7 +93,7 @@ int main(int argc, char *argv[])
   printf("Launching the program\n");
   fflush(stdout);
 
-  while ((c = getopt (argc, argv, "hl:n:HDULS")) != -1)
+  while ((c = getopt (argc, argv, "hl:n:HDULSC:")) != -1)
   {
     opterr = 0;
     switch (c)
@@ -240,6 +244,42 @@ int main(int argc, char *argv[])
         break;
       }
 
+      /* -C : Use custom list */
+      case 'C':
+      {
+        CustomListLen = strlen(optarg);
+        if(CustomListLen > 0)
+        {
+          UseCustomList = 1;
+          PasswordOptionsSet = 1;
+
+          /* Prevent any overflow */
+          if(CustomListLen >= (sizeof(CustomListBuffer) - 1))
+          {
+            /* Print the current time */
+            printf("[%04d-%02d-%02d %02d:%02d:%02d] ", timeinfo->tm_year + 1900, timeinfo->tm_mon + 1,
+                   timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+
+            printf("Warning ! Custom list is too long (%u ASCII characters), use a truncated list with %lu ASCII characters\n", CustomListLen, sizeof(CustomListBuffer) - 1);
+
+            /* Limit the length of the custom list */
+            CustomListLen = sizeof(CustomListBuffer) - 1;
+          }
+
+          /* Copy the custom list */
+          memset(CustomListBuffer, 0, sizeof(CustomListBuffer));
+          memcpy(CustomListBuffer, optarg, CustomListLen);
+
+          /* Print the current time */
+          printf("[%04d-%02d-%02d %02d:%02d:%02d] ", timeinfo->tm_year + 1900, timeinfo->tm_mon + 1,
+                 timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+
+          printf("Use custom list to generate password(s) : \"%s\"\n", CustomListBuffer);
+          fflush(stdout);
+        }
+        break;
+      }
+
       default:
       {
         usage();
@@ -304,12 +344,14 @@ int main(int argc, char *argv[])
     UseLettersUpperCase  = DEFAULT_USE_UPPERCASE_LETTERS;
     UseLettersLowerCase  = DEFAULT_USE_LOWERCASE_LETTERS;
     UseSpecialCharacters = DEFAULT_USE_SPECIAL_CHARACTERS;
+    UseCustomList        = DEFAULT_USE_CUSTOM_LIST;
 
     if(UseDecNumbers) printf("[%04d-%02d-%02d %02d:%02d:%02d] Use decimal characters [0..9]\n", timeinfo->tm_year + 1900, timeinfo->tm_mon + 1, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
     if(UseHexNumbers) printf("[%04d-%02d-%02d %02d:%02d:%02d] Use hexadecimal characters [0..9][A..F]\n", timeinfo->tm_year + 1900, timeinfo->tm_mon + 1, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
     if(UseLettersUpperCase) printf("[%04d-%02d-%02d %02d:%02d:%02d] Use uppercase letters [A..F]\n", timeinfo->tm_year + 1900, timeinfo->tm_mon + 1, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
     if(UseLettersLowerCase) printf("[%04d-%02d-%02d %02d:%02d:%02d] Use lowercase letters [a..f]\n", timeinfo->tm_year + 1900, timeinfo->tm_mon + 1, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
     if(UseSpecialCharacters) printf("[%04d-%02d-%02d %02d:%02d:%02d] Use special characters\n", timeinfo->tm_year + 1900, timeinfo->tm_mon + 1, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+    if(UseCustomList) printf("[%04d-%02d-%02d %02d:%02d:%02d] Use custom list\n", timeinfo->tm_year + 1900, timeinfo->tm_mon + 1, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
     fflush(stdout);
   }
 
@@ -390,9 +432,21 @@ int main(int argc, char *argv[])
   /* Fill the character buffer with special characters */
   if(UseSpecialCharacters)
   {
-    for(i = 0; i < sizeof(SpacialCharacterList); i++)
+    for(i = 0; i < sizeof(SpecialCharacterList); i++)
     {
-      BufferCharactersList[BufferCharactersLen] = SpacialCharacterList[i];
+      BufferCharactersList[BufferCharactersLen] = SpecialCharacterList[i];
+
+      /* Prevent any overflow */
+      BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+    }
+  }
+
+  /* Fill the character buffer with custom list ASCII characters */
+  if(UseCustomList)
+  {
+    for(i = 0; i < CustomListLen; i++)
+    {
+      BufferCharactersList[BufferCharactersLen] = CustomListBuffer[i];
 
       /* Prevent any overflow */
       BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
@@ -463,6 +517,7 @@ void usage(void)
   printf("-U          : Use uppercase letters characters [A..Z]\n");
   printf("-L          : Use lowercase letters characters [a..z]\n");
   printf("-S          : Use special letters characters \"<>?,.;:!%%&#{}()[]-_@+=|\"\n");
+  printf("-C \"List\"   : Use a custom ASCII list of characters (up to 256 characters in the list)\n");
   printf("\n");
   fflush(stdout);
 } /* End usage() */

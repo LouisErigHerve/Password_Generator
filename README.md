@@ -1,5 +1,5 @@
 # Password_Generator
-A simple password generator : Decimal, Hexadecimal, Letters (uppercase and lowercase), Special characters
+A simple password generator : Decimal, Hexadecimal, Letters (uppercase and lowercase), Special characters or Custom ASCII list
 
 # How to ?
 
@@ -22,6 +22,7 @@ Can generate password with :
 - Decimal numbers [0..9]
 - Hexadecimal numbers [0..9][A..F]
 - Special characters "<>?,.;:!%&#{}()[]-_@+=|"
+- Custom ASCII list (up to 256 ASCII characters)
 
 Limitations :
 - Password length up to 256 characters
@@ -47,6 +48,7 @@ Password_Generator [options] :
 -U          : Use uppercase letters characters [A..Z]
 -L          : Use lowercase letters characters [a..z]
 -S          : Use special letters characters "<>?,.;:!%&#{}()[]-_@+=|"
+-C "List"   : Use a custom ASCII list of characters (up to 256 characters in the list)
 
 ```
 
@@ -157,6 +159,26 @@ Call the following command : `Password_Generator -l 30 -n 10 -L -U -D -S`
 [2021-09-20 14:00:03] Password generated #009 = gToXdTvwe=Z&W3__|CfGMe&=6(({:+
 [2021-09-20 14:00:03] Password generated #010 = m2#vP&SLK:!AvOV?OXfKc5skYws,ww
 [2021-09-20 14:00:03] Exiting the program
+
+```
+
+### Example 6 : Password type = Custom ASCII list [0123?.,;:&+=!] - Length = 20 characters - Number of password to generate = 6
+
+Call the following command : `Password_Generator -l 20 -n 6 -C "0123?.,;:&+=!"`
+
+```bash
+./Password_Generator -l 20 -n 6 -C "0123?.,;:&+=!"
+[2021-09-20 18:56:20] Launching the program
+[2021-09-20 18:56:20] Password length = 20 characters
+[2021-09-20 18:56:20] Number of password to generate = 6
+[2021-09-20 18:56:20] Use custom list to generate password(s) : "0123?.,;:&+=!"
+[2021-09-20 18:56:20] Password generated #001 = 0.&.:!+:22!:0!+!+!=,
+[2021-09-20 18:56:20] Password generated #002 = ,0=:3&,22?&.&&:=?+&=
+[2021-09-20 18:56:20] Password generated #003 = :;1&0=1!3:!&?!::0&33
+[2021-09-20 18:56:20] Password generated #004 = 2&+3:?02:.2&3+;,&+3=
+[2021-09-20 18:56:20] Password generated #005 = .?:.,&11?!3!&;&23112
+[2021-09-20 18:56:20] Password generated #006 = 111:+0!?=.;!+,&+13,;
+[2021-09-20 18:56:20] Exiting the program
 
 ```
 
