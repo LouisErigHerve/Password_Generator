@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
             printf("[%04d-%02d-%02d %02d:%02d:%02d] ", timeinfo->tm_year + 1900, timeinfo->tm_mon + 1,
                    timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
 
-            printf("Warning ! Custom list is too long (%u ASCII characters), use a truncated list with %lu ASCII characters\n", CustomListLen, sizeof(CustomListBuffer) - 1);
+            printf("Warning ! Custom list is too long (%u ASCII characters), use a truncated list with %lu ASCII characters\n", CustomListLen, (long unsigned int)sizeof(CustomListBuffer) - 1);
 
             /* Limit the length of the custom list */
             CustomListLen = sizeof(CustomListBuffer) - 1;
