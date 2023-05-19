@@ -18,7 +18,7 @@
 #define UNUSED_VARIABLE(x) (x = x)
 
 #define DEFAULT_PASSWORD_LEN   32  /* 32 characters length by default */
-#define MAX_PASSWORD_LEN      256  /* 256 characters length maximum */
+#define MAX_PASSWORD_LEN      512  /* 512 characters length maximum */
 
 #define DEFAULT_PASSWORD_NUM    4  /* Generate 4 passwords by default */
 #define MAX_PASSWORD_NUM      512  /* 512 passwords maximum to generate */
@@ -38,6 +38,12 @@ const uint8_t SpecialCharacterList[] =
   '<', '>', '?', ',', '.', ';', ':', '|',
   '!', '%', '&', '#', '{', '}', '(', ')',
   '[', ']', '-', '_', '@', '+', '='
+};
+
+const uint8_t ExcludeSimilarCharacterList[] =
+{
+  'i', 'l', '1', 'L', 'o', 'O', '0', 'Q',
+  'I', '|'
 };
 
 
@@ -69,6 +75,7 @@ int main(int argc, char *argv[])
   uint32_t UseLettersLowerCase      = 0;
   uint32_t UseSpecialCharacters     = 0;
   uint32_t UseCustomList            = 0;
+  uint32_t ExcludeSimilarCharacters = 0;
   uint32_t PasswordLength           = 0;
   uint32_t NbOfPasswordToGenerate   = 0;
   uint8_t  BufferCharactersList[512] = {0};  /* 512 bytes should be enough to store the entire character list, increase if necessary */
@@ -93,7 +100,7 @@ int main(int argc, char *argv[])
   printf("Launching the program\n");
   fflush(stdout);
 
-  while ((c = getopt (argc, argv, "hl:n:HDULSC:")) != -1)
+  while ((c = getopt (argc, argv, "hl:n:HDULSC:E")) != -1)
   {
     opterr = 0;
     switch (c)
@@ -280,6 +287,22 @@ int main(int argc, char *argv[])
         break;
       }
 
+      /* -E : Exclude similar characters (i, l, 1, L, o, 0, O, Q, |) */
+      case 'E':
+      {
+
+        ExcludeSimilarCharacters = 1;
+
+        /* Print the current time */
+        printf("[%04d-%02d-%02d %02d:%02d:%02d] ", timeinfo->tm_year + 1900, timeinfo->tm_mon + 1,
+               timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+
+        printf("Exclude similar characters : i, l, 1, L, o, 0, O, Q, I, |\n");
+        fflush(stdout);
+
+        break;
+      }
+
       default:
       {
         usage();
@@ -371,10 +394,17 @@ int main(int argc, char *argv[])
     /* Fill '0' to '9' */
     for(i = 0; i < 10; i++)
     {
-      BufferCharactersList[BufferCharactersLen] = i + '0';
+      if(ExcludeSimilarCharacters && IsCharacterExcluded(i + '0'))
+      {
+        /* Character excluded, nothing to do */
+      }
+      else
+      {
+        BufferCharactersList[BufferCharactersLen] = i + '0';
 
-      /* Prevent any overflow */
-      BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+        /* Prevent any overflow */
+        BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+      }
     }
   }
 
@@ -385,19 +415,33 @@ int main(int argc, char *argv[])
     /* Fill '0' to '9' */
     for(i = 0; i < 10; i++)
     {
-      BufferCharactersList[BufferCharactersLen] = i + '0';
+      if(ExcludeSimilarCharacters && IsCharacterExcluded(i + '0'))
+      {
+        /* Character excluded, nothing to do */
+      }
+      else
+      {
+        BufferCharactersList[BufferCharactersLen] = i + '0';
 
-      /* Prevent any overflow */
-      BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+        /* Prevent any overflow */
+        BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+      }
     }
 
     /* Fill 'A' to 'F' */
     for(i = 0; i < 6; i++)
     {
-      BufferCharactersList[BufferCharactersLen] = i + 'A';
+      if(ExcludeSimilarCharacters && IsCharacterExcluded(i + 'A'))
+      {
+        /* Character excluded, nothing to do */
+      }
+      else
+      {
+        BufferCharactersList[BufferCharactersLen] = i + 'A';
 
-      /* Prevent any overflow */
-      BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+        /* Prevent any overflow */
+        BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+      }
     }
   }
 
@@ -408,10 +452,17 @@ int main(int argc, char *argv[])
     /* Fill 'A' to 'Z' */
     for(i = 0; i < 26; i++)
     {
-      BufferCharactersList[BufferCharactersLen] = i + 'A';
+      if(ExcludeSimilarCharacters && IsCharacterExcluded(i + 'A'))
+      {
+        /* Character excluded, nothing to do */
+      }
+      else
+      {
+        BufferCharactersList[BufferCharactersLen] = i + 'A';
 
-      /* Prevent any overflow */
-      BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+        /* Prevent any overflow */
+        BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+      }
     }
   }
 
@@ -422,10 +473,17 @@ int main(int argc, char *argv[])
     /* Fill 'a' to 'z' */
     for(i = 0; i < 26; i++)
     {
-      BufferCharactersList[BufferCharactersLen] = i + 'a';
+      if(ExcludeSimilarCharacters && IsCharacterExcluded(i + 'a'))
+      {
+        /* Character excluded, nothing to do */
+      }
+      else
+      {
+        BufferCharactersList[BufferCharactersLen] = i + 'a';
 
-      /* Prevent any overflow */
-      BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+        /* Prevent any overflow */
+        BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+      }
     }
   }
 
@@ -434,10 +492,17 @@ int main(int argc, char *argv[])
   {
     for(i = 0; i < sizeof(SpecialCharacterList); i++)
     {
-      BufferCharactersList[BufferCharactersLen] = SpecialCharacterList[i];
+      if(ExcludeSimilarCharacters && IsCharacterExcluded(SpecialCharacterList[i]))
+      {
+        /* Character excluded, nothing to do */
+      }
+      else
+      {
+        BufferCharactersList[BufferCharactersLen] = SpecialCharacterList[i];
 
-      /* Prevent any overflow */
-      BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+        /* Prevent any overflow */
+        BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+      }
     }
   }
 
@@ -446,10 +511,17 @@ int main(int argc, char *argv[])
   {
     for(i = 0; i < CustomListLen; i++)
     {
-      BufferCharactersList[BufferCharactersLen] = CustomListBuffer[i];
+      if(ExcludeSimilarCharacters && IsCharacterExcluded(CustomListBuffer[i]))
+      {
+        /* Character excluded, nothing to do */
+      }
+      else
+      {
+        BufferCharactersList[BufferCharactersLen] = CustomListBuffer[i];
 
-      /* Prevent any overflow */
-      BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+        /* Prevent any overflow */
+        BufferCharactersLen = (BufferCharactersLen + 1) % sizeof(BufferCharactersList);
+      }
     }
   }
 
@@ -499,6 +571,34 @@ int main(int argc, char *argv[])
 
 
 /*
+ * @brief : Check if the character must be excluded
+ *
+ * @param Character : The byte/character to check
+ *
+ * @return 1 = Character must be excluded
+ *         0 = Character is valid
+ *
+ */
+uint32_t IsCharacterExcluded(uint8_t Character)
+{
+  uint32_t FlagCharExcluded = 0;
+  uint32_t i;
+
+  /* Parse all list of excluded characters */
+  for(i = 0; i < sizeof(ExcludeSimilarCharacterList); i++)
+  {
+    if((ExcludeSimilarCharacterList[i] & 0xFF) == (Character & 0xFF))
+    {
+      FlagCharExcluded = 1;
+      break;
+    }
+  }
+
+  return FlagCharExcluded;
+} /* End IsCharacterExcluded() */
+
+
+/*
  * @brief : Displays all options / arguments of the current program
  *
  * @param None
@@ -518,6 +618,7 @@ void usage(void)
   printf("-L          : Use lowercase letters characters [a..z]\n");
   printf("-S          : Use special letters characters \"<>?,.;:!%%&#{}()[]-_@+=|\"\n");
   printf("-C \"List\"   : Use a custom ASCII list of characters (up to 256 characters in the list)\n");
+  printf("-E          : Exclude similar characters (i, l, 1, L, o, 0, O, Q, I, |)\n");
   printf("\n");
   fflush(stdout);
 } /* End usage() */

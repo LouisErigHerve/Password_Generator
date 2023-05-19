@@ -36,6 +36,7 @@ extern int optind, opterr, optopt;
 
 
 /* Function prototypes ------------------------------------------------------*/
+uint32_t IsCharacterExcluded(uint8_t Character);
 void usage(void);
 
 
