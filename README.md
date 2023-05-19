@@ -25,13 +25,13 @@ Can generate password with :
 - Custom ASCII list (up to 256 ASCII characters)
 
 Limitations :
-- Password length up to 256 characters
+- Password length up to 512 characters
 - Password number up to 512 passwords generated
 
 These limitations may be increased by changing the following constant in the `main.c` :
 
 ```
-#define MAX_PASSWORD_LEN      256  /* 256 characters length maximum */
+#define MAX_PASSWORD_LEN      512  /* 512 characters length maximum */
 #define MAX_PASSWORD_NUM      512  /* 512 passwords maximum to generate */
 
 ```
@@ -49,7 +49,7 @@ Password_Generator [options] :
 -L          : Use lowercase letters characters [a..z]
 -S          : Use special letters characters "<>?,.;:!%&#{}()[]-_@+=|"
 -C "List"   : Use a custom ASCII list of characters (up to 256 characters in the list)
-
+-E          : Exclude similar characters (i, l, 1, L, o, 0, O, Q, I, |)
 ```
 
 ### Example 1 : Password type = Hexadecimal - Length = 10 characters (5 bytes) - Number of password to generate = 5
@@ -182,6 +182,28 @@ Call the following command : `Password_Generator -l 20 -n 6 -C "0123?.,;:&+=!"`
 
 ```
 
+### Example 7 : Password type = Uppercase + Lowercase letters + Numbers + Exclude similar characters (i, l, 1, L, o, 0, O, Q, I, |) - Length = 20 characters - Number of password to generate = 6
+
+Call the following command : `Password_Generator -l 20 -n 6 -L -U -D -E`
+
+```bash
+./Password_Generator -l 20 -n 6 -U -L -D -E
+[2023-05-19 13:32:04] Launching the program
+[2023-05-19 13:32:04] Password length = 20 characters
+[2023-05-19 13:32:04] Number of password to generate = 6
+[2023-05-19 13:32:04] Use uppercase letters [A..Z] to generate password(s)
+[2023-05-19 13:32:04] Use lowercase letters [a..z] to generate password(s)
+[2023-05-19 13:32:04] Use decimal numbers [0..9] to generate password(s)
+[2023-05-19 13:32:04] Exclude similar characters : i, l, 1, L, o, 0, O, Q, I, |
+[2023-05-19 13:32:04] Password generated #001 = 6ukBWs8EB9Rjad5PTvkm
+[2023-05-19 13:32:04] Password generated #002 = T5X8sxZz8NnzyURfwjaR
+[2023-05-19 13:32:04] Password generated #003 = HHjnE2BT8ped5et2mkeq
+[2023-05-19 13:32:04] Password generated #004 = awEpKDgphpWHCAW2Sppk
+[2023-05-19 13:32:04] Password generated #005 = Jwdg3DfPEMM8Dm96jrzF
+[2023-05-19 13:32:04] Password generated #006 = FRgc4kHRUcajV3jRfgRn
+[2023-05-19 13:32:04] Exiting the program
+
+```
 
 Enjoy !
 
