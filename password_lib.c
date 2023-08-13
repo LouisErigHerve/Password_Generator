@@ -83,107 +83,80 @@ void GeneratePassword(uint32_t  PasswordLen,
 {
   uint64_t i = 0;
   uint64_t NbLoop = 0;
-  uint64_t RandomXor = 0;
   time_t   rawtime;
   struct   tm * timeinfo = NULL;
   struct   timeval tv;
   uint32_t RandomIndex;
+  uint8_t  OldByte1 = 0;
+  uint8_t  OldByte2 = 0;
+  uint8_t  OldByte3 = 0;
+  uint8_t  OldByte4 = 0;
+  uint32_t RepeatLoop = 0;
 
-  /* Step 1 : Get the current time */
+  /* Step 1 : Init the pseudo random generator */
+  srand(time(NULL));
+
+  /* Step 2 : Get the current time */
   time(&rawtime);
   timeinfo = localtime(&rawtime);
   gettimeofday (&tv, NULL);
 
-  /* Step 2 : Compute the number of loop to process */
+  /* Step 3 : Compute the number of loop to process */
   NbLoop  = (uint32_t)(timeinfo->tm_yday * 24 * 3600);
   NbLoop += (uint32_t)(timeinfo->tm_hour * 3600);
   NbLoop += (uint32_t)(timeinfo->tm_min * 60);
   NbLoop += (uint32_t)(timeinfo->tm_sec);
   NbLoop += (uint32_t)(tv.tv_usec);
 
-  /* Step 3 : Generate random numbers */
+  /* Step 3 : Generate several random numbers */
   for(i = 0; i < NbLoop; i++)
   {
     rand();
   }
 
-  /* Step 4 : Generate a 64 bits random number based on the current time */
-  RandomXor = Generate64BitsRandomNumber();
-
-  /* Step 5 : Generates a random password */
+  /* Step 4 : Generates a random password */
   for(i = 0; i < PasswordLen; i++)
   {
-    RandomIndex = (uint32_t)((rand() ^ RandomXor) % CharacterListSize);
+    RandomIndex = (uint32_t)(rand() % CharacterListSize);
+
+    /* Check that the current random byte selected is different from the previous */
+    if(((OldByte1 & 0xFF) == (CharacterList[RandomIndex] & 0xFF)) ||
+       ((OldByte2 & 0xFF) == (CharacterList[RandomIndex] & 0xFF)) ||
+       ((OldByte3 & 0xFF) == (CharacterList[RandomIndex] & 0xFF)) ||
+       ((OldByte4 & 0xFF) == (CharacterList[RandomIndex] & 0xFF)))
+    {
+      RepeatLoop = 0;
+
+      /* Force exit after up to 1000 loop */
+      while(RepeatLoop < 1000)
+      {
+        /* Generate a new random index */
+        RandomIndex = (uint32_t)(rand() % CharacterListSize);
+        RepeatLoop++;
+
+        /* Exit the "while" loop only when a new byte different from the
+         * 4 previous one has been found */
+        if(((OldByte1 & 0xFF) != (CharacterList[RandomIndex] & 0xFF)) &&
+           ((OldByte2 & 0xFF) != (CharacterList[RandomIndex] & 0xFF)) &&
+           ((OldByte3 & 0xFF) != (CharacterList[RandomIndex] & 0xFF)) &&
+           ((OldByte4 & 0xFF) != (CharacterList[RandomIndex] & 0xFF)))
+        {
+          break;
+        }
+      }
+    }
+
+    /* Store the random byte as a character of the password */
     OutputPassword[i] = CharacterList[RandomIndex];
 
-    /* Re-generate the 64 bits random number */
-    RandomXor = Generate64BitsRandomNumber();
+    /* Shift all previous bytes */
+    OldByte4 = OldByte3;
+    OldByte3 = OldByte2;
+    OldByte2 = OldByte1;
+    OldByte1 = CharacterList[RandomIndex];
   }
 
 } /* End GeneratePassword() */
-
-
-/*
- * @brief : This function generate a random 64 bits number
- *          based on the current microsecond time machine
- *          value.
- *
- * @param None
- *
- * @return A 64 bits random number
- *
- */
-uint64_t Generate64BitsRandomNumber(void)
-{
-  uint64_t Random64bitsNum = 0;
-  uint32_t i;
-  struct   timeval tv;
-
-  /* For a 64 bits number there are 16 loop */
-  for(i = 0; i < (sizeof(Random64bitsNum) / 4); i++)
-  {
-    /* Get the current time */
-    gettimeofday (&tv, NULL);
-
-    /* Get 4 MSBits of the microsecond time value as a part
-     * of the 64 bits random number */
-    Random64bitsNum = (Random64bitsNum << 4) | (uint64_t)(tv.tv_usec & 0x0F);
-
-    /* Wait for a random delay (this ensure the
-     * microsecond counter value will change randomly on
-     * next call of the current function) */
-    Password_delay((tv.tv_usec & 0xF) + 10);
-
-    /* Call rand() to be sure to change
-     * the random system value */
-    rand();
-  }
-
-  return Random64bitsNum;
-}
-
-
-/*
- * @brief : This function generate a delay, it replace the "usleep" function not
- *          available on Windows machines.
- *          This function is not precise and must not be used for real
- *          time applications.
- *
- * @param None
- *
- * @return None
- *
- */
-void Password_delay(uint64_t Delay)
-{
-  volatile uint64_t i = 0;
-  for(i = 0; i < (Delay * 100); i++)
-  {
-    /* Call rand() to be sure to change
-     * the random system value */
-    rand();
-  }
-} /* End Password_delay() */
 
 
 /* End of file */

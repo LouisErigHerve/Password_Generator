@@ -30,6 +30,8 @@
 #define DEFAULT_USE_SPECIAL_CHARACTERS                0
 #define DEFAULT_USE_CUSTOM_LIST                       0
 
+#define EXTENDED_BUFFER_SIZE    0x100000  /* 1 MByte buffer */
+
 
 /* Global variables ---------------------------------------------------------*/
 
@@ -63,26 +65,29 @@ const uint8_t ExcludeSimilarCharacterList[] =
  */
 int main(int argc, char *argv[])
 {
-  uint32_t i = 0;
-  time_t   rawtime;
-  struct   tm * timeinfo = NULL;
-  uint32_t PasswordOptionsSet       = 0;
-  uint32_t PasswordLengthOptionsSet = 0;
-  uint32_t PasswordNumberOptionsSet = 0;
-  uint32_t UseDecNumbers            = 0;
-  uint32_t UseHexNumbers            = 0;
-  uint32_t UseLettersUpperCase      = 0;
-  uint32_t UseLettersLowerCase      = 0;
-  uint32_t UseSpecialCharacters     = 0;
-  uint32_t UseCustomList            = 0;
-  uint32_t ExcludeSimilarCharacters = 0;
-  uint32_t PasswordLength           = 0;
-  uint32_t NbOfPasswordToGenerate   = 0;
-  uint8_t  BufferCharactersList[512] = {0};  /* 512 bytes should be enough to store the entire character list, increase if necessary */
-  uint32_t BufferCharactersLen = 0;
-  uint8_t  GeneratedPassword[MAX_PASSWORD_LEN + 1] = {0};
-  uint8_t  CustomListBuffer[256 + 1] = {0};
-  uint32_t CustomListLen = 0;
+  uint32_t   i = 0;
+  time_t     rawtime;
+  struct     tm * timeinfo = NULL;
+  uint32_t   PasswordOptionsSet       = 0;
+  uint32_t   PasswordLengthOptionsSet = 0;
+  uint32_t   PasswordNumberOptionsSet = 0;
+  uint32_t   UseDecNumbers            = 0;
+  uint32_t   UseHexNumbers            = 0;
+  uint32_t   UseLettersUpperCase      = 0;
+  uint32_t   UseLettersLowerCase      = 0;
+  uint32_t   UseSpecialCharacters     = 0;
+  uint32_t   UseCustomList            = 0;
+  uint32_t   ExcludeSimilarCharacters = 0;
+  uint32_t   PasswordLength           = 0;
+  uint32_t   NbOfPasswordToGenerate   = 0;
+  uint8_t    BufferCharactersList[512] = {0};  /* 512 bytes should be enough to store the entire character list, increase if necessary */
+  uint32_t   BufferCharactersLen = 0;
+  uint8_t    GeneratedPassword[MAX_PASSWORD_LEN + 1] = {0};
+  uint8_t    CustomListBuffer[256 + 1] = {0};
+  uint32_t   CustomListLen = 0;
+  uint8_t  * BufferCharactersListExtended = NULL;  /* The pointer where EXTENDED_BUFFER_SIZE byte will be allocated */
+  uint32_t   RandomIndex = 0;
+  uint8_t    TempByte = 0;
   int Temp = 0;
   int c;
 
@@ -530,11 +535,59 @@ int main(int argc, char *argv[])
   /* ----------------------------------------------------------------------- */
   /* ----------------------------------------------------------------------- */
 
+
+  /* Allocate a new buffer with higher place */
+  BufferCharactersListExtended = malloc(EXTENDED_BUFFER_SIZE * sizeof(uint8_t));
+
+  /* Check the memory allocation result */
+  if(BufferCharactersListExtended == NULL)
+  {
+    /* Get the current time */
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    /* Print the current time */
+    printf("[%04d-%02d-%02d %02d:%02d:%02d] ", timeinfo->tm_year + 1900, timeinfo->tm_mon + 1,
+           timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+
+    printf("Error when allocating memory, exits the program\n");
+    fflush(stdout);
+    exit(0);
+  }
+
+  /* Fill the extended buffer */
+  for(i = 0; i < EXTENDED_BUFFER_SIZE; i++)
+  {
+    BufferCharactersListExtended[i] = BufferCharactersList[i % BufferCharactersLen];
+  }
+
+  /* Init the pseudo random generator */
+  srand(time(NULL));
+
+  /* Make some permutations on the extended buffer */
+  for(i = 0; i < EXTENDED_BUFFER_SIZE; i++)
+  {
+    /* Generate a random index */
+    RandomIndex = rand() % EXTENDED_BUFFER_SIZE;
+
+    /* Permute values */
+    TempByte = BufferCharactersListExtended[RandomIndex];
+    BufferCharactersListExtended[RandomIndex] = BufferCharactersListExtended[i];
+    BufferCharactersListExtended[i] = TempByte;
+  }
+
+
+  /* ----------------------------------------------------------------------- */
+  /* ----------------------------------------------------------------------- */
+  /* ----------------------------------------------------------------------- */
+  /* ----------------------------------------------------------------------- */
+
+
   /* Generate all passwords */
   for(i = 0; i < NbOfPasswordToGenerate; i++)
   {
     /* Generates a password */
-    GeneratePassword(PasswordLength, BufferCharactersList, BufferCharactersLen, GeneratedPassword);
+    GeneratePassword(PasswordLength, BufferCharactersListExtended, EXTENDED_BUFFER_SIZE, GeneratedPassword);
 
     /* Get the current time */
     time(&rawtime);
@@ -554,6 +607,8 @@ int main(int argc, char *argv[])
   /* ----------------------------------------------------------------------- */
   /* ----------------------------------------------------------------------- */
 
+  /* Free memory */
+  if(BufferCharactersListExtended) free(BufferCharactersListExtended);
 
   /* Get the current time */
   time(&rawtime);

@@ -39,8 +39,6 @@ void GeneratePassword(uint32_t  PassowrdLen,
                       uint8_t * CharacterList,
                       uint32_t  CharacterListSize,
                       uint8_t * OutputPassword);
-uint64_t Generate64BitsRandomNumber(void);
-void Password_delay(uint64_t);
 
 
 #endif /* PASSWORD_LIB_H_ */
